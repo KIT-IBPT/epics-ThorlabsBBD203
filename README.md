@@ -35,6 +35,6 @@ Panel module is located in CSS folder.
 
 ## Copyright / License
 
-This EPICS device support is licensed under the terms of the [MIT license](LICENSE) by 
+This EPICS device support is licensed under the terms of the [GNU Lesser General Public License v3.0 license](LICENSE) by 
 [Karlsruhe Institute of Technology's Institute of Beam Physics and Technology](https://www.ibpt.kit.edu/) 
 and was developed by [igor@scictrl.com](http://scictrl.org).
