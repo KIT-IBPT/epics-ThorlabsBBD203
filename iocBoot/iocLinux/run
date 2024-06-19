@@ -1,0 +1,4 @@
+#!/bin/sh
+cd "`dirname "$0"`"
+ioc="`head -n 1 st.cmd | grep -E "^#\!" | cut -b 3-`"
+"$ioc" st.cmd 2>&1 | tee -a "`dirname $0`/ioc.log"

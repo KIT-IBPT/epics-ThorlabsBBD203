@@ -1,0 +1,103 @@
+/* Author:  Igor Kriznar <igor@scictrl.com> */
+
+record(calc, "$(DEV):Status:Trig") {
+  field(DESC, "Status Trigger")
+  field(SCAN, "$(SCAN) second")
+#  field(SCAN, "Passive")
+  field(CALC, "( VAL % 3 ) + 1")
+  field(VAL, "0")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV):Status:Trig_fanout")
+}
+
+
+
+record(fanout, "$(DEV):Status:Trig_fanout") {
+  field(SELM, "Specified")
+  field(SELL, "$(DEV):Status:Trig.VAL")
+  field(LNK1, "$(DEV1):Status:Get")
+  field(LNK2, "$(DEV2):Status:Get")
+  field(LNK3, "$(DEV3):Status:Get")
+}
+
+
+record(longin, "$(DEV1):Status:Get") {
+  field(DESC, "Status code")
+  field(DTYP, "stream")
+  field(SCAN, "Passive")
+  field(INP, "@ThorlabsDDS.proto getStatus($(DEV1):int_mod2,$(DEV1):Pos:Get:Step,$(DEV1):Velocity:Get:Step,$(DEV1):Status:CodeA,$(DEV1):Status:CodeB) $(PORT)")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV1):Status:Code_fanout PP MSS")
+}
+
+record(longin, "$(DEV2):Status:Get") {
+  field(DESC, "Status code")
+  field(DTYP, "stream")
+  field(SCAN, "Passive")
+  field(INP, "@ThorlabsDDS.proto getStatus($(DEV2):int_mod2,$(DEV2):Pos:Get:Step,$(DEV2):Velocity:Get:Step,$(DEV2):Status:CodeA,$(DEV2):Status:CodeB) $(PORT)")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV2):Status:Code_fanout PP MSS")
+}
+
+record(longin, "$(DEV3):Status:Get") {
+  field(DESC, "Status code")
+  field(DTYP, "stream")
+  field(SCAN, "Passive")
+  field(INP, "@ThorlabsDDS.proto getStatus($(DEV3):int_mod2,$(DEV3):Pos:Get:Step,$(DEV3):Velocity:Get:Step,$(DEV3):Status:CodeA,$(DEV3):Status:CodeB) $(PORT)")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV3):Status:Code_fanout PP MSS")
+}
+
+
+### ## #
+#
+# Move parameters trigger
+#
+
+record(calc, "$(DEV):Move:Trig") {
+  field(DESC, "Move Param Trigger")
+  field(SCAN, "1 second")
+  field(CALC, "( VAL % 3 ) + 1")
+  field(VAL, "0")
+  field(PINI, "YES")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV):Move:Trig_fanout")
+}
+
+
+
+record(fanout, "$(DEV):Move:Trig_fanout") {
+  field(SELM, "Specified")
+  field(SELL, "$(DEV):Move:Trig.VAL")
+  field(LNK1, "$(DEV1):Move:Get")
+  field(LNK2, "$(DEV2):Move:Get")
+  field(LNK3, "$(DEV3):Move:Get")
+}
+
+
+record(longin, "$(DEV1):Move:Get") {
+  field(DESC, "Move code")
+  field(DTYP, "stream")
+  field(SCAN, "Passive")
+  field(INP, "@ThorlabsDDS.proto getMoveParam($(DEV1):int_mod2,$(DEV1):Move:Accel:Get:Step,$(DEV1):Move:Velo:Get:Step) $(PORT)")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV1):Move:Code_fanout PP MSS")
+}
+
+record(longin, "$(DEV2):Move:Get") {
+  field(DESC, "Status code")
+  field(DTYP, "stream")
+  field(SCAN, "Passive")
+  field(INP, "@ThorlabsDDS.proto getMoveParam($(DEV2):int_mod2,$(DEV2):Move:Accel:Get:Step,$(DEV2):Move:Velo:Get:Step) $(PORT)")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV2):Move:Code_fanout PP MSS")
+}
+
+record(longin, "$(DEV3):Move:Get") {
+  field(DESC, "Status code")
+  field(DTYP, "stream")
+  field(SCAN, "Passive")
+  field(INP, "@ThorlabsDDS.proto getMoveParam($(DEV3):int_mod2,$(DEV3):Move:Accel:Get:Step,$(DEV3):Move:Velo:Get:Step) $(PORT)")
+  field(TPRO, "0")
+  field(FLNK, "$(DEV3):Move:Code_fanout PP MSS")
+}

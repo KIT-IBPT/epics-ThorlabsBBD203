@@ -1,0 +1,197 @@
+/* Author:  Igor Kriznar <igor@scictrl.com> */
+
+# system variables, control in and out behaviour
+
+#OutTerminator  = ;
+#InTerminator  = ;
+#LockTimeout  = 120;
+#ReplyTimeout  = 100;
+#ReadTimeout  = 100;
+#WriteTimeout  = 20;
+#MaxInput = 4;
+
+interminator  = "";
+outterminator = "";
+locktimeout   = 1000;
+replytimeout  = 1000;
+readtimeout   = 100;
+extrainput    = Ignore;
+
+# message structure of 6 bytes
+
+# byte 0 - message ID, describes what the action the message requests
+# byte 1 - message ID, describes what the action the message requests 
+# byte 2 - param1 or 0, can be channel identifier
+# byte 3 - param2 or 0
+# byte 4 - destination module: 0x50 is USB device, for DDS300 it is fixed
+# byte 5 - (message?) source: 0x01 is host or PC, for DDS300 it is fixed
+
+# In non‐card‐slot type of systems the source and destination of messages is always unambiguous, as each
+# module appears as a separate USB node in the system. In these systems, when the host
+# sends a message to the module, it uses the source identification byte of 0x01 (meaning host)
+# and the destination byte of 0x50 (meaning “generic USB unit”). (In messages that the
+# module sends back to the host, the content of the source and destination bytes is swapped.)
+
+# The reason the command (0x50) does not work is that the destination byte is different for out benchtop devices. 
+# In this case the equivalent command would be TX 05, 00, 00, 00, 21, 01
+
+
+# $1 - module number {1|2|3}
+getIDN {
+    out 0x05,0x00,0x00,0x00,"%(\$1)r",0x01;
+    in "%*6r%*4r%14c%*66c";
+}
+
+#
+# Status
+#
+# Response bytes (little endian):
+# 00-05 (6) - header
+# 06-07 (2) - Chan Iden
+# 08-11 (4) - Position
+# 12-13 (2) - Velocity
+# 14-15 (2)- Reserved
+# 16-19 (4)- Status bits
+#
+# Method parameters
+# \$1 - module code {x1|x2|x3}
+# \$2 - lower 2 status bytes (32)
+# \$3 - higher 2 status bytes (32)
+# \$4 - Position
+# \$5 - Velocity
+# 
+#
+getStatus {
+    out 0x90,0x04,0x01,0x00,"%(\$1)r",0x01;
+    in "%*6r%*2r%(\$2)#4r%(\$3)#2r%*2r%(\$4)#2r%(\$5)#2r";
+}
+
+#getStatus1 {
+#    out 0x90,0x04,0x01,0x00,0x21,0x01;
+#    in "%*6r%*2r%(\$1)#4r%(\$2)#2r%*2r%(\$3)#2r%(\$4)#2r";
+#}
+#
+#getStatus2 {
+#    out 0x90,0x04,0x01,0x00,0x22,0x01;
+#    in "%*6r%*2r%(\$1)#4r%(\$2)#2r%*2r%(\$3)#2r%(\$4)#2r";
+#}
+#
+#getStatus3 {
+#    out 0x90,0x04,0x01,0x00,0x23,0x01;
+#    in "%*6r%*2r%(\$1)#4r%(\$2)#2r%*2r%(\$3)#2r%(\$4)#2r";
+#}
+# $1 - module code {x1|x2|x3}
+#getStatus1 {
+#    out 0x29,0x04,0x01,0x00,"%(\$1)r",0x01;
+#    in "%*6r%*2r%#4r";
+#}
+
+# $1 - module code {x1|x2|x3}
+getUpdate {
+    out 0x90,0x04,0x01,0x00,"%(\$1)r",0x01;
+    in "%*6r%*2r%(\$1)#2r%(\$2)#2r%#4r";
+}
+
+#
+# Stop in controlled manner
+# $1 - module code {x1|x2|x3}
+#
+cmdStop {
+    out 0x65,0x04,0x01,0x02,"%(\$1)r",0x01;
+}
+
+
+#
+# Abort: Stop in immediate (abrupt) manner
+# $1 - module code {x1|x2|x3}
+#
+cmdAbort {
+    out 0x65,0x04,0x01,0x01,"%(\$1)r",0x01;
+}
+
+#
+# enable module
+# $1 - module code {x1|x2|x3}
+#
+cmdEnable {
+    out 0x10,0x02,0x01,0x01,"%(\$1)r",0x01;
+}
+
+#
+# disable module
+# $1 - module code {x1|x2|x3}
+#
+cmdDisable {
+    out 0x10,0x02,0x01,0x02,"%(\$1)r",0x01;
+}
+
+#
+# Home
+# $1 - module code {x1|x2|x3}
+#
+cmdHome {
+    out 0x43,0x04,0x01,0x00,"%(\$1)r",0x01;
+}
+
+#
+# Move Relative
+# 
+# Parameters
+# $1 - module code {x1|x2|x3}
+# (\$2) - relative distance in steps
+#
+cmdMoveRel {
+    out 0x48,0x04,0x06,0x00,"%(\$1)r",0x01,0x01,0x00,"%(\$2)#.4r";
+}
+
+#
+# Move Absolute
+# 
+# Parameters
+#   $1 - module number {1|2|3}
+# (\$2) - absolute distance in steps
+#
+cmdMoveAbs {
+    out 0x53,0x04,0x06,0x00,"%(\$1)r",0x01,0x01,0x00,"%(\$2)#.4r";
+}
+
+#
+# Move parameters get
+#
+# Response bytes (little endian):
+# 00-05 (6) - header
+# 06-07 (2) - Chan Iden
+# 08-11 (4) - min velocity, always 0
+# 12-15 (4) - acceleration, steps/s/s
+# 16-19 (4) - max velocity, steps/s
+#
+# Method parameters
+# \$1 - module code
+# \$2 - acceleration
+# \$3 - velocity
+# 
+#
+getMoveParam {
+    out 0x14,0x04,0x01,0x00,"%(\$1)r",0x01;
+    in "%*6r%*2r%*4r%(\$2)#4r%(\$3)#4r";
+}
+
+#
+# Move parameters set
+#
+# set bytes (20 bytes, little endian):
+# 00-05 (6) - header
+# 06-07 (2) - Chan Iden
+# 08-11 (4) - min velocity, always 0
+# 12-15 (4) - acceleration, steps/s/s
+# 16-19 (4) - max velocity, steps/s
+#
+# Method parameters
+# \$1 - module code
+# \$2 - acceleration
+# \$3 - velocity
+# 
+#
+setMoveParam {
+    out 0x13,0x04,0x0E,0x00,"%(\$1)r",0x01,0x01,0x00,0x00,0x00,0x00,0x00,"%(\$2)#.4r","%(\$3)#.4r";
+}
